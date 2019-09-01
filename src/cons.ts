@@ -1,0 +1,58 @@
+import * as io from "socket.io-client";
+import express from "express";
+import * as http from 'http'
+import socketIO from 'socket.io'
+
+export function client<T>(api: any, url: string) {
+  return async function login(username: string, password: string, superadmin: (users: Array<string>)=>Promise<string>):Promise<T> {
+    return new Promise<T>((res, rej) => {
+      const socket = io.default(process.env.API_URL)
+      socket.emit('login', {username, password})
+
+      socket.once('superadmin', async (users: Array<string>) => {
+        username = await superadmin(users);
+        socket.emit('superadmin', username)
+      })
+
+      socket.once('login-wrong', () => {
+        rej('Password und Benutzername passen nicht zusammen.')
+      })
+
+      socket.once('welcome', () => {
+        res(<any>new api(username, socket))
+      })
+    })
+  }
+}
+
+export function server(api: any, checkLogin: (username:string, password: string) => Promise<boolean|'superuser'>, getUsers: () => Promise<Array<string>>, PORT = 4000) {
+  const app = express()
+  const server = http.createServer(app)
+  const io = socketIO(server)
+  server.listen(PORT);
+
+  io.on('connection', function (socket) {
+    socket.once('login', async (auth: {username:string, password:string}) => {
+      let authOK = await checkLogin(auth.username, auth.password)
+      if(authOK === 'superuser') {
+        let users = await getUsers()    
+        socket.once('superuser', (username: string) => {
+          new api(username, socket, false)
+        })
+        socket.emit('superuser', users)
+        return
+      }
+      if(authOK) {
+        new api(auth.username, socket, false)
+      } else {
+        socket.emit('login-wrong')
+        setTimeout(()=>{socket.disconnect()}, 5000)
+      }
+    })
+    socket.emit('new-connection')
+  })
+
+  console.log(`SERVER GESTARTET 🚀 auf PORT ${PORT}`)
+
+  return server
+}

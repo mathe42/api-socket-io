@@ -1,12 +1,19 @@
 {
   "name": "api-socket-io",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "build/index.js",
   "author": {
     "name": "Sebastian Krüger",
     "email": "2pi_r2@gmx.de",
     "url": "https://github.com/mathe42"
   },
+  "keywords": [
+    "socket.io",
+    "api",
+    "client",
+    "server",
+    "typescript"
+  ],
   "license": "MIT",
   "scripts": {
     "build": "tsc -p tsconfig.json"

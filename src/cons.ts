@@ -19,7 +19,7 @@ export function client<T>(api: any, url: string) {
       })
 
       socket.once('login-wrong', () => {
-        rej('Password und Benutzername passen nicht zusammen.')
+        rej(process.env.pwd_wrong || 'Password und Benutzername passen nicht zusammen.')
       })
 
       socket.once('welcome', () => {
@@ -31,11 +31,11 @@ export function client<T>(api: any, url: string) {
 
 /**
  * @param  {any} api
- * @param  {(username:string,password:string)=>Promise<boolean|'superuser'>} checkLogin
+ * @param  {(username:string,password:string)=>Promise<boolean|'superadmin'>} checkLogin
  * @param  {()=>Promise<Array<string>>} getUsers
  * @param  {} PORT=4000
  */
-export function server(api: any, checkLogin: (username:string, password: string) => Promise<boolean|'superuser'>, getUsers: () => Promise<Array<string>>, PORT = 4000) {
+export function server(api: any, checkLogin: (username:string, password: string) => Promise<boolean|'superadmin'>, getUsers: () => Promise<Array<string>>, PORT = 4000) {
   const app = express()
   const server = http.createServer(app)
   const io = socketIO(server)
@@ -44,12 +44,12 @@ export function server(api: any, checkLogin: (username:string, password: string)
   io.on('connection', function (socket) {
     socket.once('login', async (auth: {username:string, password:string}) => {
       let authOK = await checkLogin(auth.username, auth.password)
-      if(authOK === 'superuser') {
+      if(authOK === 'superadmin') {
         let users = await getUsers()    
-        socket.once('superuser', (username: string) => {
+        socket.once('superadmin', (username: string) => {
           new api(username, socket, false)
         })
-        socket.emit('superuser', users)
+        socket.emit('superadmin', users)
         return
       }
       if(authOK) {

@@ -1,8 +1,16 @@
 {
-  "name": "api-socket",
-  "version": "1.0.0",
+  "name": "api-socket-io",
+  "version": "0.0.1",
   "main": "build/index.js",
+  "author": {
+    "name": "Sebastian Krüger",
+    "email": "2pi_r2@gmx.de",
+    "url": "https://github.com/mathe42"
+  },
   "license": "MIT",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
   "dependencies": {
     "express": "^4.17.1",
     "socket.io": "^2.2.0"

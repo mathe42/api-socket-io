@@ -3,6 +3,10 @@ import express from "express";
 import * as http from 'http'
 import socketIO from 'socket.io'
 
+/**
+ * @param  {any} api
+ * @param  {string} url
+ */
 export function client<T>(api: any, url: string) {
   return async function login(username: string, password: string, superadmin: (users: Array<string>)=>Promise<string>):Promise<T> {
     return new Promise<T>((res, rej) => {
@@ -25,6 +29,12 @@ export function client<T>(api: any, url: string) {
   }
 }
 
+/**
+ * @param  {any} api
+ * @param  {(username:string,password:string)=>Promise<boolean|'superuser'>} checkLogin
+ * @param  {()=>Promise<Array<string>>} getUsers
+ * @param  {} PORT=4000
+ */
 export function server(api: any, checkLogin: (username:string, password: string) => Promise<boolean|'superuser'>, getUsers: () => Promise<Array<string>>, PORT = 4000) {
   const app = express()
   const server = http.createServer(app)

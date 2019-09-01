@@ -6,21 +6,21 @@ export class builder<R,T extends connectorBase> {
   private instances: Array<T> = []
 
   
-  private dbAbfrage: (abfrage:R)=>Promise<any>
+  private dbAbfrage: (abfrage:R|Array<R>)=>Promise<any|Array<any>>
   private dbExecute: (name: string, ...args:Array<any>)=>Promise<number|string|boolean>
 
   
   /**
    * Builder für Server
-   * @param  {(abfrage:R)=>Promise<any>} dbAbfrage
+   * @param  {(abfrage:R|Array<R>)=>(Promise<any>|Promise<Array<any>>)} dbAbfrage
    * @param  {(name:string,...args:Array<any>)=>Promise<number|string|boolean>} dbExecute
    */
-  constructor(dbAbfrage: (abfrage:R)=>Promise<any>, dbExecute: (name: string, ...args:Array<any>)=>Promise<number|string|boolean>)
+  constructor(dbAbfrage: (abfrage:R|Array<R>)=>(Promise<any>|Promise<Array<any>>), dbExecute: (name: string, ...args:Array<any>)=>Promise<number|string|boolean>)
   /**
    * Builder Constructor für Client
    */
   constructor()
-  constructor(dbAbfrage?: (abfrage:R)=>Promise<any>, dbExecute?: (name: string, ...args:Array<any>)=>Promise<number|string|boolean>) {
+  constructor(dbAbfrage?: (abfrage:R|Array<R>)=>(Promise<any>|Promise<Array<any>>), dbExecute?: (name: string, ...args:Array<any>)=>Promise<number|string|boolean>) {
     if (dbAbfrage && dbExecute) {
       this.dbAbfrage = dbAbfrage
       this.dbExecute = dbExecute
@@ -128,7 +128,7 @@ export class builder<R,T extends connectorBase> {
       descriptor.value = function(...args: (number | boolean | string)[]) {
         const self: T = this;
 
-        return new Promise((res, rej) => {
+        return new Promise(async (res, rej) => {
           const fehler = ME.validate(params, ...args)
 
           if (fehler!==true) {
@@ -140,24 +140,16 @@ export class builder<R,T extends connectorBase> {
             ME.clientHandler(self, propertyKey, args, res, rej)
           } else {
             let abfragenMap = abfragen.map(v => v(self, ...args));
-            let result = Promise.all(
-              abfragenMap.map(v => {
-                return ME.dbAbfrage(v.abfrage).then(result => ({
-                  name: v.name,
-                  result
-                }));
-              })
-            );
 
-            result
-              .then(results => {
-                let r: any = {};
-                results.forEach(v => {
-                  r[v.name] = v.result;
-                });
-                res(r);
-              })
-              .catch(rej);
+            let result:Array<any> = await ME.dbAbfrage(abfragenMap.map(v=>v.abfrage)) 
+
+            let r: any = {};
+            
+            result.forEach((v, i)=>{
+              r[abfragenMap[i].name] = v.result;
+            })
+
+            res(r)
           }
         });
       };
@@ -193,7 +185,7 @@ export class builder<R,T extends connectorBase> {
                 })
               } else if (info.query) {
                 ME.dbAbfrage(info.query(self, ...args))
-                .then((res)=>{
+                .then((res:any)=>{
                   if (info.queryHandler) {
                     return info.queryHandler(res)
                   } else {

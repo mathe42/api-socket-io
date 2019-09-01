@@ -2,10 +2,15 @@
   "name": "api-socket-io",
   "version": "0.0.4",
   "main": "build/index.js",
+  "description": "API with Socket.IO",
   "author": {
     "name": "Sebastian Krüger",
     "email": "2pi_r2@gmx.de",
     "url": "https://github.com/mathe42"
+  },
+  "repository": {
+    "url": "https://github.com/mathe42/api-socket-io",
+    "type": "git"
   },
   "keywords": [
     "socket.io",

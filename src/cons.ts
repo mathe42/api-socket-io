@@ -64,5 +64,8 @@ export function server(api: any, checkLogin: (username:string, password: string)
 
   console.log(`SERVER GESTARTET 🚀 auf PORT ${PORT}`)
 
-  return server
+  return {
+    server,
+    express: app
+  }
 }

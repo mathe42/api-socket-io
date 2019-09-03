@@ -16,12 +16,11 @@ Die Funktionalität ergibt sich dann aus Decoratoren die der Klasse und Funktion
 Wir empfehlen den Server mit SSL zu sichern. Aktuell unterstützt dieses Packet das aber nicht, da wir das bei uns über einen reverse Proxy in einem Docker Container machen. Gerne kannst du aber einen PR erstellen falls du es implementieren möchtest.
 
 ## Validator
-
-
+Wir haben verschiedene Validatoren entwickelt. Diese werden zur validierung der eingehenden Daten verwendet. Auch diese sind aktuell nur auf Deutsch verfügbar.
 
 ## Beispiel
 
-```
+```ts
 import { stringValidator, numberValidator, booleanValidator, builder, connectorBase, server as server_api, client as client_api } from "api-socket-io";
 import { query as query_2 } from "./connector";
  
@@ -88,7 +87,7 @@ Die Reihenfolge soll immer register, auth, inform, nichts/query/mutation sein. S
 ## Vue Plugin
 Um das intigrierte Vue Plugin nutzen zu können müssen einfach die folgenden Zeilen vor aufruf des Vue Konstruktors hinzu kommen.
 
-```
+```ts
 import Vue from 'vue'
 import { vuePlugin } from 'api-socket-io'
 import { api } from './api'

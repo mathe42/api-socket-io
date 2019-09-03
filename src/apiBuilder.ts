@@ -227,6 +227,29 @@ export class builder<R,T extends connectorBase> {
     }
     return true
   }
+
+  auth(
+    check: () => true | string
+  ) {
+    let ME = this
+
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+      let old = descriptor.value
+
+      descriptor.value = function(...args: (number | boolean | string)[]) {
+        return new Promise((res, rej) => {
+          let err = check.call(this)
+
+          if (err === true) {
+            old(...args).then(res).catch(rej)
+          } else {
+            rej(err)
+          }
+        })
+      };
+    };
+  }
+
 }
 
 

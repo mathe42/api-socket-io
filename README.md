@@ -1,6 +1,6 @@
 # api-socket-io
 
-Docs followes...
+Docs followes in https://github.com/mathe42/api-socket-io/tree/master/docs
 
 ## Was? Warum?
 Dieses Packet wird in einer deutschen Website genutzt daher sind viele Dinge damit wir es einfacher haben auf Deutsch. Dies betrifft insbesondere die JSDOC comments für intellisense in VSCode und die Validatoren.
@@ -26,7 +26,7 @@ import { stringValidator, numberValidator, booleanValidator, builder, connectorB
 import { query as query_2 } from "./connector";
  
 
-const {useClass, inform, query, mutation, register} = 
+const {useClass, inform, query, mutation, register, auth} = 
   new builder<string, api>(
     query_2, 
     async (name:string, ...args: Array<any>) => {
@@ -34,9 +34,13 @@ const {useClass, inform, query, mutation, register} =
     }
   )
 
+const isAdmin = auth(()=>this.usergroup==='admin'?true:'You have to be Admin to use this method.')
+
+
 @useClass
 export class api extends connectorBase {
   @register
+  @isAdmin
   @inform('arbeitskreise')
   @mutation('addArbeitskreis', [
     new stringValidator('Bezeichnung').required().maxLength(100).minLength(3)
@@ -61,6 +65,11 @@ export class api extends connectorBase {
     (self, akID: number) => ({name: 'mitglieder', abfrage: `SELECT a.personID, p.vorname, p.nachname, p.gebDat, p.geschlecht, a.date, a.neuerStatus, a.ID FROM person_arbeitskreis a, personen p WHERE p.ID = a.personID AND a.akID = ${akID} ORDER BY p.ID`})
   ])
   arbeitskreis(akID: number):Promise<any>{return}
+
+  constructor(public isClient:boolean, public socket:Socket) {
+    super(isClient, socket)
+    this.usergroup = 'admin' //get from db
+  }
 }
 
 export function server() {
@@ -72,3 +81,6 @@ export function client() {
 }
 
 ```
+
+## Order of Decorators
+Die Reihenfolge soll immer register, auth, inform, nichts/query/mutation sein. So können breaking changes vermieden werden.

@@ -1,6 +1,6 @@
 {
   "name": "api-socket-io",
-  "version": "0.0.7",
+  "version": "0.1.0",
   "main": "build/index.js",
   "description": "API with Socket.IO",
   "author": {
@@ -17,7 +17,9 @@
     "api",
     "client",
     "server",
-    "typescript"
+    "typescript",
+    "vue",
+    "vuejs"
   ],
   "license": "MIT",
   "scripts": {

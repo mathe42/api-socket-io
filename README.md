@@ -84,3 +84,22 @@ export function client() {
 
 ## Order of Decorators
 Die Reihenfolge soll immer register, auth, inform, nichts/query/mutation sein. So können breaking changes vermieden werden.
+
+## Vue Plugin
+Um das intigrierte Vue Plugin nutzen zu können müssen einfach die folgenden Zeilen vor aufruf des Vue Konstruktors hinzu kommen.
+
+```
+import Vue from 'vue'
+import { vuePlugin } from 'api-socket-io'
+import { api } from './api'
+Vue.use(vuePlugin, {api, url: 'api.example.de'})
+```
+
+Dieses Plugin nutzen wir selbst für ein Projekt und haben das daher hier includiert. Falls du änliches für Angular, React etc. gemacht hast erzeuge gerne ein PR.
+
+## Was ist geplant? / What is planed?
+Viele Funktionen werden noch folgen - beispielsweise validatoren wenn wir sie selbst brauchen. 
+* Beispiele
+* Docs in English
+* Optimisation
+* ...

@@ -128,7 +128,7 @@ export class builder<R,T extends connectorBase> {
   
   query(
     params: Array<param>,
-    abfragen: Array<(self: T,...args: any[]) => {name: string, abfrage: R} | null>
+    abfragen: Array<(self: T,...args: any[]) => {name: string, abfrage: R, single?: boolean} | null>
   ) {
     let ME = this
 
@@ -152,7 +152,11 @@ export class builder<R,T extends connectorBase> {
             let r: any = {};
             
             result.forEach((v, i)=>{
-              r[abfragenMap[i].name] = v.result;
+              if (abfragenMap[i].single) {
+                r[abfragenMap[i].name] = v.result[0];
+              } else {
+                r[abfragenMap[i].name] = v.result;
+              }
             })
 
             res(r)

@@ -19,7 +19,8 @@
     "server",
     "typescript",
     "vue",
-    "vuejs"
+    "vuejs",
+    "express"
   ],
   "license": "MIT",
   "scripts": {

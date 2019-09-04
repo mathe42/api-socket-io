@@ -1,5 +1,6 @@
 import { param } from "./validatoren";
 import { Socket } from "socket.io";
+import { EventEmitter } from "events";
 
 export class builder<R,T extends connectorBase> {
   private methods: Array<string> = []
@@ -55,22 +56,25 @@ export class builder<R,T extends connectorBase> {
         super(...args)
         let self: T = <any>this
 
-        ME.methods.forEach((method) => {
-          self.socket.on(method, 
-            (id:string, ...args: any[]) => {
-              this[method](...args)
-                .then(result=>{
-                  self.socket.emit(`${id}-result`, result)
-                })
-                .catch(err => {
-                  self.socket.emit(`${id}-error`, err)
-                })
-            })
-        })
+        if (self.isClient) {
+          self.socket.on('inform', (name: string, id?: number) => self.ee.emit(name, id))
+        } else {
+          ME.methods.forEach((method) => {
+            self.socket.on(method, 
+              (id:string, ...args: any[]) => {
+                this[method](...args)
+                  .then(result=>{
+                    self.socket.emit(`${id}-result`, result)
+                  })
+                  .catch(err => {
+                    self.socket.emit(`${id}-error`, err)
+                  })
+              })
+          })
 
-        ME.instances.push(<any>this)
-
-        self.socket.emit('welcome')
+          ME.instances.push(<any>this)
+          self.socket.emit('welcome')
+        }
       }
     }
   }
@@ -254,5 +258,6 @@ export class builder<R,T extends connectorBase> {
 
 
 export abstract class connectorBase {
+  ee: EventEmitter = new EventEmitter()
   constructor(public isClient:boolean, public socket:Socket) {}
 }

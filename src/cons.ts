@@ -11,19 +11,21 @@ export function client<T>(api: any, url: string) {
   return async function login(username: string, password: string, superadmin: (users: Array<string>)=>Promise<string>):Promise<T> {
     return new Promise<T>((res, rej) => {
       const socket = io.default(url)
-      socket.emit('login', {username, password})
+      socket.once('new-connection', ()=>{
+        socket.once('superadmin', async (users: Array<string>) => {
+          username = await superadmin(users);
+          socket.emit('superadmin', username)
+        })
 
-      socket.once('superadmin', async (users: Array<string>) => {
-        username = await superadmin(users);
-        socket.emit('superadmin', username)
-      })
+        socket.once('login-wrong', () => {
+          rej(process.env.pwd_wrong || 'Password und Benutzername passen nicht zusammen.')
+        })
 
-      socket.once('login-wrong', () => {
-        rej(process.env.pwd_wrong || 'Password und Benutzername passen nicht zusammen.')
-      })
+        socket.once('welcome', () => {
+          res(<any>new api(username, socket))
+        })
 
-      socket.once('welcome', () => {
-        res(<any>new api(username, socket))
+        socket.emit('login', {username, password})
       })
     })
   }

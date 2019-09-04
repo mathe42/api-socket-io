@@ -92,19 +92,18 @@ export class builder<R,T extends connectorBase> {
   mutation(mutationName: string, params:Array<param>) {
     let ME = this
 
-    return function (target:any, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target:T, propertyKey: string, descriptor: PropertyDescriptor) {
       descriptor.value = function(...args: (number | boolean | string)[]) {
-        const self: T = this;
         return new Promise((res, rej) => {
           const fehler = ME.validate(params, ...args)
-
+          
           if (fehler!==true) {
             rej(fehler)
             return
           }
 
-          if (self.isClient) {
-            ME.clientHandler(self, mutationName, args, res, rej)
+          if (target.isClient) {
+            ME.clientHandler(target, mutationName, args, res, rej)
           } else {
             ME.dbExecute(mutationName, ...args).then(res).catch(rej)
           }
@@ -133,10 +132,8 @@ export class builder<R,T extends connectorBase> {
   ) {
     let ME = this
 
-    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target: T, propertyKey: string, descriptor: PropertyDescriptor) {
       descriptor.value = function(...args: (number | boolean | string)[]) {
-        const self: T = this;
-
         return new Promise(async (res, rej) => {
           const fehler = ME.validate(params, ...args)
 
@@ -145,10 +142,10 @@ export class builder<R,T extends connectorBase> {
             return
           }
 
-          if (self.isClient) {
-            ME.clientHandler(self, propertyKey, args, res, rej)
+          if (target.isClient) {
+            ME.clientHandler(target, propertyKey, args, res, rej)
           } else {
-            let abfragenMap = abfragen.map(v => v(self, ...args));
+            let abfragenMap = abfragen.map(v => v(target, ...args));
 
             let result:Array<any> = await ME.dbAbfrage(abfragenMap.map(v=>v.abfrage)) 
 
@@ -170,10 +167,9 @@ export class builder<R,T extends connectorBase> {
   inform(informsName: Array<{infoName: string, idValue?: number, query?: (self: T,...args: Array<string|number|boolean>) => R, queryHandler?: (res: any)=>number}>|string, valID?:number) {
     let ME = this
 
-    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target: T, propertyKey: string, descriptor: PropertyDescriptor) {
       const old = descriptor.value
-      const self: T = this;
-    
+
       descriptor.value = function (...args:Array<any>) {
         setImmediate(() => {
           if (typeof informsName === 'string') {
@@ -193,7 +189,7 @@ export class builder<R,T extends connectorBase> {
                   inst.socket.emit('inform', info.infoName, args[info.idValue])
                 })
               } else if (info.query) {
-                ME.dbAbfrage(info.query(self, ...args))
+                ME.dbAbfrage(info.query(target, ...args))
                 .then((res:any)=>{
                   if (info.queryHandler) {
                     return info.queryHandler(res)
@@ -240,8 +236,6 @@ export class builder<R,T extends connectorBase> {
   auth(
     check: () => true | string
   ) {
-    let ME = this
-
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
       let old = descriptor.value
 

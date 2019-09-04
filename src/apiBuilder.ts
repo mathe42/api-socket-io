@@ -40,40 +40,45 @@ export class builder<R,T extends connectorBase> {
    * @param  {string} propertyKey
    * @param  {PropertyDescriptor} descriptor
    */
-  register (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-    this.methods.push(propertyKey);
-  }
+  register() {
+    let ME = this
+
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+      ME.methods.push(propertyKey);
+    }
+  } 
   
   /**
    * Manipuliert die Klasse für API einsatz
    * @param {K} constructor 
    */
-  useClass<K extends {new(...args:any[]):{}}>(constructor:K) {
+  useClass() {
     let ME = this
+    return function <K extends {new(...args:any[]):{}}>(constructor:K) {
+      return class extends constructor {
+        constructor(...args:any[]) {
+          super(...args)
+          let self: T = <any>this
 
-    return class extends constructor {
-      constructor(...args:any[]) {
-        super(...args)
-        let self: T = <any>this
+          if (self.isClient) {
+            self.socket.on('inform', (name: string, id?: number) => self.ee.emit(name, id))
+          } else {
+            ME.methods.forEach((method) => {
+              self.socket.on(method, 
+                (id:string, ...args: any[]) => {
+                  this[method](...args)
+                    .then(result=>{
+                      self.socket.emit(`${id}-result`, result)
+                    })
+                    .catch(err => {
+                      self.socket.emit(`${id}-error`, err)
+                    })
+                })
+            })
 
-        if (self.isClient) {
-          self.socket.on('inform', (name: string, id?: number) => self.ee.emit(name, id))
-        } else {
-          ME.methods.forEach((method) => {
-            self.socket.on(method, 
-              (id:string, ...args: any[]) => {
-                this[method](...args)
-                  .then(result=>{
-                    self.socket.emit(`${id}-result`, result)
-                  })
-                  .catch(err => {
-                    self.socket.emit(`${id}-error`, err)
-                  })
-              })
-          })
-
-          ME.instances.push(<any>this)
-          self.socket.emit('welcome')
+            ME.instances.push(<any>this)
+            self.socket.emit('welcome')
+          }
         }
       }
     }

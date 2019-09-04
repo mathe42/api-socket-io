@@ -54,6 +54,7 @@ export function server(api: any, checkLogin: (username:string, password: string)
       }
       if(authOK) {
         new api(auth.username, socket, false)
+        socket.emit('welcome')
       } else {
         socket.emit('login-wrong')
         setTimeout(()=>{socket.disconnect()}, 5000)

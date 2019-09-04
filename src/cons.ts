@@ -10,7 +10,7 @@ import socketIO from 'socket.io'
 export function client<T>(api: any, url: string) {
   return async function login(username: string, password: string, superadmin: (users: Array<string>)=>Promise<string>):Promise<T> {
     return new Promise<T>((res, rej) => {
-      const socket = io.default(process.env.API_URL)
+      const socket = io.default(url)
       socket.emit('login', {username, password})
 
       socket.once('superadmin', async (users: Array<string>) => {

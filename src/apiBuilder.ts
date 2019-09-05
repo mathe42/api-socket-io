@@ -153,6 +153,12 @@ export class builder<R,T extends connectorBase> {
             
             result.forEach((v, i)=>{
               if (abfragenMap[i].single) {
+                if(abfragenMap[i].name === 'default') {
+                  r = {
+                    ...v.result[0],
+                    ...r
+                  }
+                }
                 r[abfragenMap[i].name] = v.result[0];
               } else {
                 r[abfragenMap[i].name] = v.result;
